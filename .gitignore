@@ -1,0 +1,12 @@
+# Run-scoped Garnet snapshots — never commit these
+.garnet/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Local agent scratch
+node_modules/
+*.log

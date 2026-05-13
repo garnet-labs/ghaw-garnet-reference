@@ -1,0 +1,24 @@
+{
+  "entries": {
+    "actions/github-script@v9.0.0": {
+      "repo": "actions/github-script",
+      "version": "v9.0.0",
+      "sha": "3a2844b7e9c422d3c10d287c895573f7108da1b3"
+    },
+    "actions/setup-node@v4": {
+      "repo": "actions/setup-node",
+      "version": "v4",
+      "sha": "49933ea5288caeca8642d1e84afbd3f7d6820020"
+    },
+    "garnet-org/action@v2": {
+      "repo": "garnet-org/action",
+      "version": "v2",
+      "sha": "9e819143e63d6dda04bca2e90ac85e3cf0e5289d"
+    },
+    "github/gh-aw-actions/setup@v0.72.1": {
+      "repo": "github/gh-aw-actions/setup",
+      "version": "v0.72.1",
+      "sha": "bc56a0cad2f450c562810785ef38649c04db812a"
+    }
+  }
+}
