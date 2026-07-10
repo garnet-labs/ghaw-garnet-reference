@@ -90,7 +90,7 @@ steps:
       jibril_version: "2.12.0"
 
 # 4. (Production) pin to a verified SHA
-#    uses: garnet-org/action@9e819143e63d6dda04bca2e90ac85e3cf0e5289d  # v2
+#    uses: garnet-org/action@3d47f4a9004f7356c980a0e8d420ef5984750e3c  # v2
 ```
 
 Then run `gh aw compile` and commit both the `.md` and `.lock.yml`.
@@ -99,7 +99,7 @@ Then run `gh aw compile` and commit both the `.md` and `.lock.yml`.
 
 | Component | Version |
 |---|---|
-| `garnet-org/action` | `v2` → SHA `9e819143e63d6dda04bca2e90ac85e3cf0e5289d` (auto-pinned by `gh aw compile`) |
+| `garnet-org/action` | `v2` → SHA `3d47f4a9004f7356c980a0e8d420ef5984750e3c` (auto-pinned by `gh aw compile`) |
 | `jibril_version` | `2.12.0` |
 | `gh-aw` CLI | `v0.72.1` |
 | `gh-aw` runtime (awf) | `v0.25.41` |

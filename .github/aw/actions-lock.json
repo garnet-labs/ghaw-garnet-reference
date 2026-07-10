@@ -13,7 +13,7 @@
     "garnet-org/action@v2": {
       "repo": "garnet-org/action",
       "version": "v2",
-      "sha": "9e819143e63d6dda04bca2e90ac85e3cf0e5289d"
+      "sha": "3d47f4a9004f7356c980a0e8d420ef5984750e3c"
     },
     "github/gh-aw-actions/setup@v0.72.1": {
       "repo": "github/gh-aw-actions/setup",
