@@ -78,17 +78,25 @@ that was added, removed, or changed version. Keep exact names and versions.
 Call `get_runtime_review` with `repo: "${{ github.repository }}"` and
 `pr: ${{ github.event.pull_request.number }}`.
 
-- The record counts only when it is bound to the current head
-  `${{ github.event.pull_request.head.sha }}`. CI runs in parallel with you, so
-  if the tool reports the record as pending, stale or not yet posted, wait
-  (`sleep 30`) and call it again, at most 12 times.
+- The record counts only when the result's `pull_request.head_sha` equals the
+  current head `${{ github.event.pull_request.head.sha }}` and the record is
+  finalized (`record.status` is `finalized`). CI runs in parallel with you, so if
+  the verdict is `undeterminable` because the record is pending, stale or not yet
+  posted, wait (`sleep 30`) and call it again, at most 12 times. If it is still
+  not head-bound and finalized after that, report `undeterminable`.
 - Verdicts: `changed` means new outbound connections or new execution chains were
   recorded; `unchanged` means a complete capture recorded nothing new; `recorded`
   means a first snapshot with nothing to compare against; `undeterminable` means
   the capture was incomplete or the record is not bound to this head. Never
   upgrade `undeterminable` to clean.
-- When the verdict is `changed`, call `get_execution_profile` for the `test`
-  job to read the execution chain behind each new destination.
+- Read `assessment` with the verdict. Only `workload-change` has destinations to
+  attribute to packages. `noise-only-change` means only runner background or
+  GitHub platform destinations changed: report `none recorded` for packages and
+  say so in the closing line.
+- When the assessment is `workload-change`, call `get_execution_profile` with the
+  `test` job's `profile_url` to read the execution chain behind each new
+  destination. Use the profile only if its `github.pr.run_on_current_head` is
+  `true`; otherwise say the profile is not bound to this head and skip chains.
 
 ## 3. Connect them
 
