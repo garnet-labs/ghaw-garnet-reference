@@ -17,8 +17,6 @@ on:
     paths:
       - package.json
       - package-lock.json
-      - pnpm-lock.yaml
-      - yarn.lock
   bots: ["dependabot[bot]", "renovate[bot]", "devin-ai-integration[bot]"]
   reaction: "eyes"
 
@@ -42,8 +40,6 @@ tools:
   github:
     toolsets: [repos, pull_requests]
   bash:
-    - "git diff *"
-    - "git log *"
     - "sleep *"
     - "cat *"
     - "jq *"
@@ -72,9 +68,10 @@ changed at runtime when the repo's CI workflow (`CI`, job `test`) ran `npm ci` a
 
 ## 1. What the diff says
 
-Run `git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} -- package.json package-lock.json pnpm-lock.yaml yarn.lock`
-and list every package that was added, removed, or changed version. Keep exact
-names and versions.
+Read the pull request's diff of `package.json` and `package-lock.json` with the
+GitHub tool (`pull_request_read`, method `get_files` or `get_diff`; the checkout
+is shallow, so do not rely on `git diff` against the base) and list every package
+that was added, removed, or changed version. Keep exact names and versions.
 
 ## 2. What the record says
 
