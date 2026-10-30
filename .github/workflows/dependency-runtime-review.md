@@ -57,6 +57,9 @@ safe-outputs:
   add-labels:
     allowed: [runtime-changed, runtime-nothing-new, runtime-capture-incomplete]
     max: 1
+  remove-labels:
+    allowed: [runtime-changed, runtime-nothing-new, runtime-capture-incomplete]
+    max: 2
 ---
 
 # Dependency Runtime Review
@@ -122,6 +125,8 @@ Post one comment with `add_comment` in this shape, nothing more:
 - One closing line: what the record covered (which job) and what it did not.
   Do not use the words detected, verified, caught, malicious or safe.
 
-Then add exactly one label with `add_labels`:
-`runtime-changed` for `changed`, `runtime-nothing-new` for `unchanged`, and
-`runtime-capture-incomplete` for `recorded` or `undeterminable`.
+Then set exactly one runtime label: with `remove_labels`, remove whichever of
+`runtime-changed`, `runtime-nothing-new` and `runtime-capture-incomplete` do not
+apply (a previous head may have left one behind), and with `add_labels` add the
+one that does: `runtime-changed` for `changed`, `runtime-nothing-new` for
+`unchanged`, and `runtime-capture-incomplete` for `recorded` or `undeterminable`.
