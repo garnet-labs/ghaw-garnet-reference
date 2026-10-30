@@ -27,6 +27,8 @@ permissions:
 
 engine: copilot
 
+inlined-imports: true
+
 timeout-minutes: 15
 max-turns: 40
 
