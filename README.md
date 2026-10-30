@@ -17,7 +17,7 @@ pull_request (paths: package.json, lockfiles)
 
 - gh-aw primitives: `on.pull_request` with `paths`/`bots`/`reaction`, `mcp-servers` (HTTP, `allowed` tools), `network.allowed`, `tools.bash` allowlist, `safe-outputs` (`add-comment`, `add-labels`), automatic threat detection, SHA-pinned actions via `.github/aw/actions-lock.json`.
 - The agent counts the record only when it is bound to the PR's current head; an incomplete or missing capture is unknown, never clean. Observed names are quoted as untrusted data.
-- Garnet authenticates with GitHub OIDC (`id-token: write`); no `GARNET_API_TOKEN` is needed for this workflow. The Copilot engine needs `COPILOT_GITHUB_TOKEN` or `permissions: copilot-requests: write`.
+- Garnet authenticates with GitHub OIDC (`id-token: write`); no `GARNET_API_TOKEN` is needed for this workflow. The Copilot engine uses `permissions: copilot-requests: write` (inference billed to the org, no PAT); set `COPILOT_GITHUB_TOKEN` instead if your org lacks centralized Copilot billing.
 - Reviewer grounding: `.coderabbit.yaml`, `.pr_agent.toml`, `greptile.json`, `REVIEW.md`, `.agents/skills/garnet-runtime-review/SKILL.md` are vendored byte-for-byte from garnet-runtime-review-mcp `examples/reviewers/`.
 - Recompile with `gh aw compile .github/workflows/dependency-runtime-review.md` after editing the source; never edit the lock.
 
