@@ -19,7 +19,7 @@ on:
       - package-lock.json
       - pnpm-lock.yaml
       - yarn.lock
-  bots: ["dependabot[bot]", "renovate[bot]"]
+  bots: ["dependabot[bot]", "renovate[bot]", "devin-ai-integration[bot]"]
   reaction: "eyes"
 
 permissions:
