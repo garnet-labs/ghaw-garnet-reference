@@ -6,12 +6,12 @@ This is the companion repo to the Garnet resources guide [**Instrumenting GitHub
 
 ## New: Dependency Runtime Review (gh-aw v1.0 GA)
 
-GitHub shows you what files changed in a PR. Garnet shows you what changed at runtime when CI ran it. [`dependency-runtime-review.md`](.github/workflows/dependency-runtime-review.md) connects the two for dependency changes: when a pull request touches `package.json` or a lockfile, the ordinary Garnet-recorded [`CI`](.github/workflows/ci.yml) job installs and tests the new tree, and an agentic workflow reads the Garnet record for that PR through the hosted [Runtime Review MCP](https://github.com/garnet-labs/garnet-runtime-review-mcp) and posts one comment naming which changed package is behind each new outbound connection, plus one label (`runtime-changed`, `runtime-nothing-new`, `runtime-capture-incomplete`).
+GitHub shows you what files changed in a PR. Garnet shows you what changed at runtime when CI ran it. [`dependency-runtime-review.md`](.github/workflows/dependency-runtime-review.md) connects the two for dependency changes: when a pull request touches `package.json` or `package-lock.json`, the ordinary Garnet-recorded [`CI`](.github/workflows/ci.yml) job installs and tests the new tree, and an agentic workflow reads the Garnet record for that PR through the hosted [Runtime Review MCP](https://github.com/garnet-labs/garnet-runtime-review-mcp) and posts one comment naming which changed package is behind each new outbound connection, plus one label (`runtime-changed`, `runtime-nothing-new`, `runtime-capture-incomplete`).
 
 ```
 pull_request (paths: package.json, lockfiles)
   ├─ CI / test ─────── checkout → garnet-org/action@v2 (OIDC) → npm ci → npm test     recorded by Garnet
-  └─ agent (gh-aw) ─── git diff → get_runtime_review / get_execution_profile (MCP)
+  └─ agent (gh-aw) ─── PR diff (GitHub tool) → get_runtime_review / get_execution_profile (MCP)
        └─ safe-outputs: add-comment (replaces its previous comment) + add-labels
 ```
 
