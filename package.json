@@ -1,0 +1,12 @@
+{
+  "name": "ghaw-dependency-review-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Small Node project used to demonstrate Dependency Runtime Review: a gh-aw agentic workflow that reads Garnet's runtime record of a dependency change.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "lodash": "4.17.20"
+  }
+}

@@ -4,6 +4,23 @@
 
 This is the companion repo to the Garnet resources guide [**Instrumenting GitHub Agentic Workflows with Garnet**](https://garnet.ai/resources/instrument-github-agentic-workflows-with-garnet). It contains two working, opinionated workflows you can fork or copy into your own repo.
 
+## New: Dependency Runtime Review (gh-aw v1.0 GA)
+
+GitHub shows you what files changed in a PR. Garnet shows you what changed at runtime when CI ran it. [`dependency-runtime-review.md`](.github/workflows/dependency-runtime-review.md) connects the two for dependency changes: when a pull request touches `package.json` or `package-lock.json`, the ordinary Garnet-recorded [`CI`](.github/workflows/ci.yml) job installs and tests the new tree, and an agentic workflow reads the Garnet record for that PR through the hosted [Runtime Review MCP](https://github.com/garnet-labs/garnet-runtime-review-mcp) and posts one comment naming which changed package is behind each new outbound connection, plus one label (`runtime-changed`, `runtime-nothing-new`, `runtime-capture-incomplete`).
+
+```
+pull_request (paths: package.json, lockfiles)
+  ├─ CI / test ─────── checkout → garnet-org/action@v2 (OIDC) → npm ci → npm test     recorded by Garnet
+  └─ agent (gh-aw) ─── PR diff (GitHub tool) → get_runtime_review / get_execution_profile (MCP)
+       └─ safe-outputs: add-comment (replaces its previous comment) + add-labels
+```
+
+- gh-aw primitives: `on.pull_request` with `paths`/`bots`/`reaction`, `mcp-servers` (HTTP, `allowed` tools), `network.allowed`, `tools.bash` allowlist, `safe-outputs` (`add-comment`, `add-labels`), automatic threat detection, SHA-pinned actions via `.github/aw/actions-lock.json`.
+- The agent counts the record only when it is bound to the PR's current head; an incomplete or missing capture is unknown, never clean. Observed names are quoted as untrusted data.
+- Garnet authenticates with GitHub OIDC (`id-token: write`); no `GARNET_API_TOKEN` is needed for this workflow. The Copilot engine uses `permissions: copilot-requests: write` (inference billed to the org, no PAT); set `COPILOT_GITHUB_TOKEN` instead if your org lacks centralized Copilot billing.
+- Reviewer grounding: `.coderabbit.yaml`, `.pr_agent.toml`, `greptile.json`, `REVIEW.md`, `.agents/skills/garnet-runtime-review/SKILL.md` are vendored byte-for-byte from garnet-runtime-review-mcp `examples/reviewers/`.
+- Recompile with `gh aw compile .github/workflows/dependency-runtime-review.md` after editing the source; never edit the lock.
+
 ## What's in here
 
 ```
