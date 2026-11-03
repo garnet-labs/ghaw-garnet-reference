@@ -23,7 +23,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  copilot-requests: write
+  copilot-requests: none
 
 engine: copilot
 
