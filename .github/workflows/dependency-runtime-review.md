@@ -23,11 +23,9 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  copilot-requests: none
+  copilot-requests: write
 
-engine:
-  id: copilot
-  model: gpt-4.1
+engine: copilot
 
 inlined-imports: true
 
