@@ -27,10 +27,9 @@ network:
 steps:
   - name: Start Garnet Agent
     id: garnet
-    uses: garnet-org/action@v2
+    uses: garnet-org/action@v2.4.1
     with:
       api_token: ${{ secrets.GARNET_API_TOKEN }}
-      jibril_version: "2.12.0"
 
 engine: claude
 
