@@ -38,7 +38,7 @@ network:
 steps:
   - name: Start Garnet Agent
     id: garnet
-    uses: garnet-org/action@v2.4.1
+    uses: garnet-org/action@v2.5.2
     with:
       api_token: ${{ secrets.GARNET_API_TOKEN }}
 
