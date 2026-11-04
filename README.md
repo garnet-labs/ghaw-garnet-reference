@@ -6,18 +6,18 @@ This is the companion repo to the Garnet resources guide [**Instrumenting GitHub
 
 ## Dependency Runtime Review (gh-aw v1.0 GA, no tokens)
 
-GitHub shows you what files changed in a PR. Garnet shows you what changed at runtime when CI ran it. [`dependency-runtime-review.md`](.github/workflows/dependency-runtime-review.md) connects the two for dependency changes: when a pull request touches `package.json` or `package-lock.json`, the ordinary Garnet-recorded [`CI`](.github/workflows/ci.yml) job installs and tests the new tree, and an agentic workflow reads the Garnet record for that PR through the hosted [Runtime Review MCP](https://github.com/garnet-labs/garnet-runtime-review-mcp) and posts one comment naming which changed package is behind each new outbound connection, plus one label (`runtime-changed`, `runtime-nothing-new`, `runtime-capture-incomplete`).
+GitHub shows you what files changed in a PR. Garnet shows you what changed at runtime when CI ran it. [`dependency-runtime-review.md`](.github/workflows/dependency-runtime-review.md) connects the two for dependency changes: when a pull request touches `package.json` or `package-lock.json`, the ordinary Garnet-recorded [`CI`](.github/workflows/ci.yml) job installs and tests the new tree, and an agentic workflow reads the Garnet record for that PR (the Garnet App's head-bound PR comment, with the Garnet MCP at `https://api.garnet.ai/api/v2/mcp` for per-job profiles) and posts one comment naming which changed package is behind each new outbound connection, plus one label (`runtime-changed`, `runtime-nothing-new`, `runtime-capture-incomplete`).
 
 ```
 pull_request (paths: package.json, lockfiles)
   ├─ CI / test ─────── checkout → garnet-org/action@v2 (OIDC) → npm ci → npm test     recorded by Garnet
-  └─ agent (gh-aw) ─── PR diff (GitHub tool) → get_runtime_review / get_execution_profile (MCP)
+  └─ agent (gh-aw) ─── PR diff + Garnet App comment (GitHub tool) → Garnet MCP profiles (optional, per job)
        └─ safe-outputs: add-comment (replaces its previous comment) + add-labels
 ```
 
 ### See it on a real pull request
 
-[PR #10](https://github.com/garnet-labs/ghaw-garnet-reference/pull/10) adds `puppeteer` as a devDependency. Garnet recorded a new destination on that bump (`node` now reaches `storage.googleapis[.]com`, the Chrome download in Puppeteer's install script); the agent read that record through MCP and posted a [dependency-specific review](https://github.com/garnet-labs/ghaw-garnet-reference/pull/10#issuecomment-6618514847) plus the `runtime-changed` label ([agent run](https://github.com/garnet-labs/ghaw-garnet-reference/actions/runs/41741836647)). [PR #3](https://github.com/garnet-labs/ghaw-garnet-reference/pull/3), a Dependabot patch bump, shows the quiet case: nothing new recorded, capture incomplete, so the agent says the behavior is unknown and labels `runtime-capture-incomplete` rather than calling it clean. This is an internal reference run by Garnet, not a report from someone else's repository.
+[PR #10](https://github.com/garnet-labs/ghaw-garnet-reference/pull/10) adds `puppeteer` as a devDependency. Garnet recorded a new destination on that bump (`node` now reaches `storage.googleapis[.]com`, the Chrome download in Puppeteer's install script); the agent (an earlier version of this workflow, which read the record through the superseded hosted MCP) read that record and posted a [dependency-specific review](https://github.com/garnet-labs/ghaw-garnet-reference/pull/10#issuecomment-6618514847) plus the `runtime-changed` label ([agent run](https://github.com/garnet-labs/ghaw-garnet-reference/actions/runs/41741836647)). [PR #3](https://github.com/garnet-labs/ghaw-garnet-reference/pull/3), a Dependabot patch bump, shows the quiet case: nothing new recorded, capture incomplete, so the agent says the behavior is unknown and labels `runtime-capture-incomplete` rather than calling it clean. This is an internal reference run by Garnet, not a report from someone else's repository.
 
 ### Use it in your repository
 
