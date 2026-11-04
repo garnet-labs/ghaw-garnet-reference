@@ -2,9 +2,9 @@
 
 > Reference implementation: instrument [GitHub Agentic Workflows (gh-aw)](https://github.com/githubnext/gh-aw) with [Garnet](https://garnet.ai) for kernel-level visibility from **outside the agent's security boundary**.
 
-This is the companion repo to the Garnet resources guide [**Instrumenting GitHub Agentic Workflows with Garnet**](https://garnet.ai/resources/instrument-github-agentic-workflows-with-garnet). It contains two working, opinionated workflows you can fork or copy into your own repo.
+This is the companion repo to the Garnet resources guide [**Instrumenting GitHub Agentic Workflows with Garnet**](https://garnet.ai/resources/instrument-github-agentic-workflows-with-garnet). It contains three working workflows: the current **Dependency Runtime Review** path (tokenless, gh-aw v1.0 GA) and two older agent workflows from the guide that still use repository secrets. Start with the first one.
 
-## New: Dependency Runtime Review (gh-aw v1.0 GA)
+## Dependency Runtime Review (gh-aw v1.0 GA, no tokens)
 
 GitHub shows you what files changed in a PR. Garnet shows you what changed at runtime when CI ran it. [`dependency-runtime-review.md`](.github/workflows/dependency-runtime-review.md) connects the two for dependency changes: when a pull request touches `package.json` or `package-lock.json`, the ordinary Garnet-recorded [`CI`](.github/workflows/ci.yml) job installs and tests the new tree, and an agentic workflow reads the Garnet record for that PR through the hosted [Runtime Review MCP](https://github.com/garnet-labs/garnet-runtime-review-mcp) and posts one comment naming which changed package is behind each new outbound connection, plus one label (`runtime-changed`, `runtime-nothing-new`, `runtime-capture-incomplete`).
 
@@ -15,9 +15,36 @@ pull_request (paths: package.json, lockfiles)
        └─ safe-outputs: add-comment (replaces its previous comment) + add-labels
 ```
 
+### See it on a real pull request
+
+[PR #10](https://github.com/garnet-labs/ghaw-garnet-reference/pull/10) adds `puppeteer` as a devDependency. Garnet recorded a new destination on that bump (`node` now reaches `storage.googleapis[.]com`, the Chrome download in Puppeteer's install script); the agent read that record through MCP and posted a [dependency-specific review](https://github.com/garnet-labs/ghaw-garnet-reference/pull/10#issuecomment-6618514847) plus the `runtime-changed` label ([agent run](https://github.com/garnet-labs/ghaw-garnet-reference/actions/runs/41741836647)). [PR #3](https://github.com/garnet-labs/ghaw-garnet-reference/pull/3), a Dependabot patch bump, shows the quiet case: nothing new recorded, capture incomplete, so the agent says the behavior is unknown and labels `runtime-capture-incomplete` rather than calling it clean. This is an internal reference run by Garnet, not a report from someone else's repository.
+
+### Use it in your repository
+
+No repository secrets are involved. Three settings, all on GitHub:
+
+1. Install the [Garnet GitHub App](https://github.com/apps/garnet-runtime-review) on the repository. It posts the Runtime Review comment that the agent reads.
+2. Record your ordinary CI job. Give it `id-token: write` and make Garnet its first step (see [`ci.yml`](.github/workflows/ci.yml)):
+
+   ```yaml
+   permissions:
+     contents: read
+     id-token: write
+   steps:
+     - uses: actions/checkout@v7
+     - uses: garnet-org/action@96e9f81ec0f59f2322e8c67b43c4d4017d932ad3 # v2.4.1
+     - run: npm ci && npm test
+   ```
+
+3. Let the agent bill Copilot to your organization: Organization settings → Copilot → Policies → Copilot CLI → "Allow use of Copilot CLI billed to the organization". The workflow asks for it with `permissions: copilot-requests: write`.
+
+Then copy [`dependency-runtime-review.md`](.github/workflows/dependency-runtime-review.md) into `.github/workflows/`, run `gh aw compile dependency-runtime-review`, commit the `.md` and the generated `.lock.yml`, and create the three labels (`runtime-changed`, `runtime-nothing-new`, `runtime-capture-incomplete`). The next pull request that touches `package.json` or `package-lock.json` gets the comment and label.
+
+### How it is put together
+
 - gh-aw primitives: `on.pull_request` with `paths`/`bots`/`reaction`, `mcp-servers` (HTTP, `allowed` tools), `network.allowed`, `tools.bash` allowlist, `safe-outputs` (`add-comment`, `add-labels`), automatic threat detection, SHA-pinned actions via `.github/aw/actions-lock.json`.
 - The agent counts the record only when it is bound to the PR's current head; an incomplete or missing capture is unknown, never clean. Observed names are quoted as untrusted data.
-- Garnet authenticates with GitHub OIDC (`id-token: write`); no `GARNET_API_TOKEN` is needed for this workflow. The Copilot engine runs on the repository's own Actions token with `permissions: copilot-requests: write`, billed to the organization (org setting: Copilot → Policies → Copilot CLI → "Allow use of Copilot CLI billed to the organization"). No engine secret is needed. The model is pinned to `gpt-4.1` because the AWF cost proxy currently has no pricing entry for the model `auto` resolves to. Without org billing, set a `COPILOT_GITHUB_TOKEN` fine-grained PAT (Copilot Requests: Read) as a repository secret and change the permission to `copilot-requests: none`.
+- Garnet authenticates with GitHub OIDC (`id-token: write`); no `GARNET_API_TOKEN` is used. The Copilot engine runs on the repository's own Actions token with `copilot-requests: write`; no engine secret is used. The model is pinned to `gpt-4.1` because gh-aw's cost proxy currently has no pricing entry for the model `auto` resolves to. Without org billing, set a `COPILOT_GITHUB_TOKEN` fine-grained PAT (Copilot Requests: Read) as a repository secret and change the permission to `copilot-requests: none`.
 - Reviewer grounding: `.coderabbit.yaml`, `.pr_agent.toml`, `greptile.json`, `REVIEW.md`, `.agents/skills/garnet-runtime-review/SKILL.md` are vendored byte-for-byte from garnet-runtime-review-mcp `examples/reviewers/`.
 - Recompile with `gh aw compile .github/workflows/dependency-runtime-review.md` after editing the source; never edit the lock.
 
@@ -25,6 +52,11 @@ pull_request (paths: package.json, lockfiles)
 
 ```
 .github/workflows/
+  ci.yml                        # Ordinary CI, recorded by Garnet (OIDC, no token)
+  dependency-runtime-review.md  # Agent that reads the Garnet record of a dependency PR (Copilot, org-billed)
+  dependency-runtime-review.lock.yml
+
+  # Older workflows from the guide (claude engine, repository secrets):
   daily-repo-status.md          # Scheduled agent, low blast radius — use this to validate Garnet
   daily-repo-status.lock.yml    #   (compiled by `gh aw compile`)
   agentic-pkg-install.md        # Package-installing agent, high value — kernel sees postinstall
@@ -43,7 +75,9 @@ Garnet's eBPF runtime, [Jibril](https://jibril.garnet.ai/), loads on the runner 
 
 This repo is the minimum viable setup for getting there.
 
-## Quick start (10 minutes)
+## Older workflows: quick start (10 minutes)
+
+Everything below this line is about `daily-repo-status` and `agentic-pkg-install`, the two workflows from the original guide. They run the agent on the Claude engine and pass a Garnet project token, so unlike Dependency Runtime Review they need repository secrets. Skip this section if you only want the dependency review.
 
 ### 1. Required secrets
 
@@ -51,8 +85,8 @@ In **Settings → Secrets and variables → Actions**:
 
 | Secret | Source |
 |---|---|
-| `GARNET_API_TOKEN` | [dashboard.garnet.ai](https://dashboard.garnet.ai) → Settings → API Tokens |
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+| `GARNET_API_TOKEN` | [dashboard.garnet.ai](https://dashboard.garnet.ai) → Settings → API Tokens (these two workflows pass it as `api_token`; the Dependency Runtime Review path uses OIDC instead) |
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/settings/keys) (Claude engine) |
 
 See [`SECRETS.md`](./SECRETS.md) for details and org-secret rollout.
 
@@ -81,7 +115,7 @@ In the dashboard, the run's **Flows** will now include `registry.npmjs.org` and 
 
 ## The four edits that turn a stock gh-aw workflow into a Garnet-instrumented one
 
-If you're porting your own workflow rather than starting from this one:
+If you're porting your own agent workflow (the agent job itself recorded, as in the two older workflows) rather than recording ordinary CI:
 
 ```yaml
 # 1. permissions must include id-token: write (Garnet OIDC)
@@ -102,12 +136,11 @@ steps:
   - name: Start Garnet Agent
     id: garnet
     uses: garnet-org/action@v2
-    with:
-      api_token: ${{ secrets.GARNET_API_TOKEN }}
-      jibril_version: "2.12.0"
+    # with: api_token is only needed without the Garnet GitHub App + OIDC;
+    # the two older workflows here still pass it.
 
-# 4. (Production) pin to a verified SHA
-#    uses: garnet-org/action@3d47f4a9004f7356c980a0e8d420ef5984750e3c  # v2
+# 4. (Production) pin to the release SHA (current: v2.4.1, see https://garnet.ai/pins)
+#    uses: garnet-org/action@96e9f81ec0f59f2322e8c67b43c4d4017d932ad3  # v2.4.1
 ```
 
 Then run `gh aw compile` and commit both the `.md` and `.lock.yml`.
@@ -116,10 +149,10 @@ Then run `gh aw compile` and commit both the `.md` and `.lock.yml`.
 
 | Component | Version |
 |---|---|
-| `garnet-org/action` | `v2` → SHA `3d47f4a9004f7356c980a0e8d420ef5984750e3c` (auto-pinned by `gh aw compile`) |
-| `jibril_version` | `2.12.0` |
-| `gh-aw` CLI | `v0.72.1` |
-| `gh-aw` runtime (awf) | `v0.25.41` |
+| `garnet-org/action` | `v2.4.1` = `96e9f81ec0f59f2322e8c67b43c4d4017d932ad3` (current release; `ci.yml` follows the `v2` tag). The two older `.lock.yml` files still pin `3d47f4a9004f7356c980a0e8d420ef5984750e3c` (July 2026) until recompiled. |
+| `jibril_version` | Action default (`v2.17.0` at v2.4.1) for `ci.yml`; the two older workflows pin `2.12.0` |
+| `gh-aw` CLI | `v1.0.1` for `dependency-runtime-review`; `v0.72.1` for the two older locks |
+| `gh-aw` runtime (awf) | `0.29.0` / `0.25.41` respectively |
 | Runner image | `ubuntu-latest` (22.04, 24.04 verified) |
 
 ## Troubleshooting
@@ -128,7 +161,7 @@ Then run `gh aw compile` and commit both the `.md` and `.lock.yml`.
 |---|---|---|
 | `Error: Resource not accessible by integration` on Garnet step | `id-token: write` missing | Add it under `permissions:` |
 | `dial tcp: lookup api.garnet.ai: no such host` or 403 from Garnet API | `network:` shorthand still in use, or `api.garnet.ai` not in allow-list | Use the structured `network.allowed:` form |
-| Run completes but dashboard.garnet.ai shows nothing | Garnet step isn't first, or `GARNET_API_TOKEN` is wrong | Move it to position 1; re-verify the secret name |
+| Run completes but dashboard.garnet.ai shows nothing | Garnet step isn't first, or (older workflows) `GARNET_API_TOKEN` is wrong | Move it to position 1; re-verify the secret name |
 | `npm ERR! … ERR_SSL_PACKET_LENGTH_TOO_LONG` during install | gh-aw squid proxy + npm TLS mismatch | See the `.npmrc` workaround in [`agentic-pkg-install.md`](./.github/workflows/agentic-pkg-install.md) |
 | `.lock.yml` out of sync warning in Actions | Edited `.md` without recompiling | `gh aw compile`, commit both files |
 
