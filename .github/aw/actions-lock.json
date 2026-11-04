@@ -19,6 +19,11 @@
       "repo": "github/gh-aw-actions/setup",
       "version": "v1.0.1",
       "sha": "221ba4f4319de6b8e809d1a15528b3ae6a818aa5"
+    },
+    "garnet-org/action@v2.4.1": {
+      "repo": "garnet-org/action",
+      "version": "v2.4.1",
+      "sha": "96e9f81ec0f59f2322e8c67b43c4d4017d932ad3"
     }
   }
 }
