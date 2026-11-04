@@ -32,7 +32,7 @@ No repository secrets are involved. Three settings, all on GitHub:
      id-token: write
    steps:
      - uses: actions/checkout@v7
-     - uses: garnet-org/action@96e9f81ec0f59f2322e8c67b43c4d4017d932ad3 # v2.4.1
+     - uses: garnet-org/action@673a06d87748bec49e4d8df22d371b2a3420aba4 # v2.5.2
      - run: npm ci && npm test
    ```
 
@@ -139,8 +139,8 @@ steps:
     # with: api_token is only needed without the Garnet GitHub App + OIDC;
     # the two older workflows here still pass it.
 
-# 4. (Production) pin to the release SHA (current: v2.4.1, see https://garnet.ai/pins)
-#    uses: garnet-org/action@96e9f81ec0f59f2322e8c67b43c4d4017d932ad3  # v2.4.1
+# 4. (Production) pin to the release SHA (current: v2.5.2, see https://garnet.ai/pins)
+#    uses: garnet-org/action@673a06d87748bec49e4d8df22d371b2a3420aba4  # v2.5.2
 ```
 
 Then run `gh aw compile` and commit both the `.md` and `.lock.yml`.
@@ -149,8 +149,8 @@ Then run `gh aw compile` and commit both the `.md` and `.lock.yml`.
 
 | Component | Version |
 |---|---|
-| `garnet-org/action` | `v2.4.1` = `96e9f81ec0f59f2322e8c67b43c4d4017d932ad3` (current release; `ci.yml` follows the `v2` tag). The two older `.lock.yml` files still pin `3d47f4a9004f7356c980a0e8d420ef5984750e3c` (July 2026) until recompiled. |
-| `jibril_version` | Action default (`v2.17.0` at v2.4.1) for `ci.yml`; the two older workflows pin `2.12.0` |
+| `garnet-org/action` | `v2.5.2` = `673a06d87748bec49e4d8df22d371b2a3420aba4` (current release; `ci.yml` follows the `v2` tag). The two older `.lock.yml` files pin the same SHA. |
+| `jibril_version` | Action default (`v2.17.0` at v2.5.2) for `ci.yml`; the two older workflows pin `2.12.0` |
 | `gh-aw` CLI | `v1.0.1` for `dependency-runtime-review`; `v0.72.1` for the two older locks |
 | `gh-aw` runtime (awf) | `0.29.0` / `0.25.41` respectively |
 | Runner image | `ubuntu-latest` (22.04, 24.04 verified) |
