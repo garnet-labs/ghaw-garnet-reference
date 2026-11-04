@@ -42,6 +42,10 @@ network:
     - github
     - api.garnet.ai
 
+sandbox:
+  mcp:
+    trusted-bots: ["garnet-runtime-review[bot]"]
+
 tools:
   github:
     toolsets: [repos, pull_requests, issues]
