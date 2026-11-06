@@ -20,7 +20,7 @@ function readmeToHtml(markdown) {
 
 test("README renders with an <h1> in a headless browser", async () => {
     const markdown = fs.readFileSync(path.join(__dirname, "..", "README.md"), "utf8")
-    const browser = await puppeteer.launch()
+    const browser = await puppeteer.launch({ channel: "chrome" })
     try {
         const page = await browser.newPage()
         await page.setContent(readmeToHtml(markdown))
