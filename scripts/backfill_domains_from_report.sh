@@ -5,9 +5,11 @@ OUT_DIR="${1:-.garnet/runtime/latest}"
 RUN_ID="${GITHUB_RUN_ID:-}"
 REPO="${GITHUB_REPOSITORY:-}"
 GARNET_DASHBOARD_BASEURL="${GARNET_DASHBOARD_BASEURL:-https://dashboard.garnet.ai}"
-# Domain pattern: best-effort validation for ASCII hostnames (labels cannot start/end with hyphens) plus single-label hosts like localhost; IDN/punycode is not included.
+# Domain pattern: best-effort validation for ASCII hostnames (labels cannot start/end with hyphens) plus localhost; IDN/punycode is not included.
+# The last label must start with a letter and other single-label words are not hosts, so log prefixes, table headers, counts, versions and IPs are not reported as domains.
 LABEL_PATTERN='[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?'
-DOMAIN_REGEX="(((${LABEL_PATTERN}\\.)+${LABEL_PATTERN})|(${LABEL_PATTERN}))"
+TLD_PATTERN='[A-Za-z]([A-Za-z0-9-]*[A-Za-z0-9])?'
+DOMAIN_REGEX="((${LABEL_PATTERN}\\.)+${TLD_PATTERN})|localhost"
 ALLOWED_DASHBOARD_HOSTS_REGEX="${GARNET_DASHBOARD_ALLOWED_HOSTS_REGEX:-dashboard\.garnet\.ai|localhost(:[0-9]+)?}"
 
 mkdir -p "${OUT_DIR}"
