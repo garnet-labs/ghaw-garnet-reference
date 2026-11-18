@@ -128,7 +128,8 @@ fetch_public_run_report() {
 
   local entry url target
   for entry in "${attempts[@]}"; do
-    IFS="::" read -r url target <<< "${entry}"
+    url="${entry%%::*}"
+    target="${entry#*::}"
     if curl -fsS "${url}" -o "${target}" 2>> "${fetch_err}"; then
       write_file "${OUT_DIR}/public_run_report.source.txt" "${url}"
       write_file "${OUT_DIR}/public_run_report.status" "ok"
