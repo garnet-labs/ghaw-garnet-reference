@@ -1,0 +1,54 @@
+# Replay of github/gh-aw-firewall#11765: which hosts does the gh-aw Copilot CLI
+# installer contact on the runner, before the agent firewall starts?
+# Four Garnet-recorded jobs: compiler-default vs non-default version, cold vs cached.
+name: Copilot installer egress
+
+on:
+  push:
+    branches: [replay/copilot-installer-egress]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  install:
+    name: install ${{ matrix.version }} ${{ matrix.cache }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["1.0.103", "1.0.101"]
+        cache: [cold, cached]
+        include:
+          - version: "1.0.103"
+            checksums: 26cd3e4b32cde498e4961fb4d48e7b85d7859fc69af1a645a19201fdd577bdb2
+          - version: "1.0.101"
+            checksums: 018625eac68670d66ede904b9b82cdcd6ab8f87ba20e6e1fbdf0b62c8295d5be
+    steps:
+      # Runs before Garnet starts, so the seed download is not part of the record.
+      - name: Seed toolcache (cached jobs only)
+        if: matrix.cache == 'cached'
+        env:
+          VERSION: ${{ matrix.version }}
+          SUMS_SHA256: ${{ matrix.checksums }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/github/copilot-cli/releases/download/v${VERSION}"
+          cd "$RUNNER_TEMP"
+          curl -fsSLO "${base}/SHA256SUMS.txt"
+          echo "${SUMS_SHA256}  SHA256SUMS.txt" | sha256sum -c -
+          curl -fsSLO "${base}/copilot-linux-x64.tar.gz"
+          grep ' copilot-linux-x64.tar.gz$' SHA256SUMS.txt | sha256sum -c -
+          dir="${RUNNER_TOOL_CACHE}/copilot-cli/${VERSION}/x64/bin"
+          mkdir -p "$dir"
+          tar -xzf copilot-linux-x64.tar.gz -C "$dir"
+          ls -l "$dir"
+      - name: Record this job with Garnet
+        uses: garnet-org/action@673a06d87748bec49e4d8df22d371b2a3420aba4 # v2.5.2
+      - name: gh-aw setup (v1.3.1)
+        uses: github/gh-aw-actions/setup@dfe97a19c8249d41e2adfc95f92db2b8facea58f # v1.3.1
+      - name: Install Copilot CLI as gh-aw v1.3.1 compiles it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/install_copilot_cli.sh" ${{ matrix.version }} --checksums-sha256 ${{ matrix.checksums }} --prefer-toolcache --cooldown-days 3
